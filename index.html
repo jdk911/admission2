@@ -322,11 +322,22 @@ function collectRecord(){
 }
 
 async function ghGetFile(){
+  if(!CONFIG.GITHUB_TOKEN || CONFIG.GITHUB_TOKEN.startsWith('YOUR_')){
+    throw new Error('CONFIG not set — edit GITHUB_OWNER / GITHUB_REPO / GITHUB_TOKEN at the top of the file.');
+  }
   const url = `https://api.github.com/repos/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/contents/${CONFIG.RECORDS_PATH}?ref=${CONFIG.GITHUB_BRANCH}`;
   const res = await fetch(url, {headers:{Authorization:`token ${CONFIG.GITHUB_TOKEN}`}});
   if(res.status===404) return {sha:null, records:[]};
   const data = await res.json();
-  const records = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+  if(!res.ok || !data.content){
+    throw new Error(`GitHub error (${res.status}): ${data.message || 'could not read records.json'}. Check owner/repo/branch/token in CONFIG.`);
+  }
+  let records = [];
+  try{
+    records = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+  }catch(e){
+    throw new Error('records.json exists but is not valid JSON — check the file content in your repo.');
+  }
   return {sha:data.sha, records};
 }
 async function ghSaveFile(records, sha){
