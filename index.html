@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SVN Admission Portal</title>
+<style>
+:root{--maroon:#7a1f2b;--cream:#f6efe4;--ink:#222;--line:#d8cfc0;}
+*{box-sizing:border-box;font-family:'Noto Sans','Noto Sans Devanagari',Arial,sans-serif;}
+body{margin:0;background:#eee;color:var(--ink);}
+header{background:var(--cream);border-bottom:3px solid var(--maroon);padding:14px 20px;display:flex;align-items:center;gap:14px;}
+header .logo{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#c99,#7a1f2b);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;}
+header h1{margin:0;font-size:20px;color:var(--maroon);}
+header h2{margin:0;font-size:13px;letter-spacing:1px;}
+header p{margin:2px 0 0;font-size:12px;color:#555;}
+nav{display:flex;background:var(--maroon);}
+nav button{flex:1;padding:12px;background:none;border:0;color:#fff;font-size:14px;cursor:pointer;opacity:.8;}
+nav button.active{opacity:1;border-bottom:3px solid #fff;font-weight:bold;}
+main{max-width:960px;margin:16px auto;background:#fff;padding:20px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.15);}
+.bar-title{text-align:center;color:var(--maroon);margin:0 0 4px;}
+.bar-sub{text-align:center;font-size:12px;color:#666;margin:0 0 16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.field{margin-bottom:10px;}
+.field.full{grid-column:1/-1;}
+label{display:block;font-size:12px;color:#444;margin-bottom:3px;}
+label b{color:var(--maroon);}
+input,select,textarea{width:100%;padding:7px;border:1px solid var(--line);border-radius:4px;font-size:14px;}
+textarea{min-height:50px;}
+section.grp{margin:22px 0 10px;}
+section.grp h3{background:var(--cream);border-left:4px solid var(--maroon);padding:6px 10px;font-size:14px;color:var(--maroon);}
+table.doclist{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+table.doclist th,table.doclist td{border:1px solid var(--line);padding:6px 8px;text-align:left;}
+table.doclist input[type=number]{width:60px;}
+.photo-box{width:140px;height:170px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fafafa;margin-bottom:6px;}
+.photo-box img{width:100%;height:100%;object-fit:cover;}
+.camrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+button.btn{background:var(--maroon);color:#fff;border:0;padding:9px 16px;border-radius:4px;cursor:pointer;font-size:13px;}
+button.btn.alt{background:#555;}
+#camModal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:99;flex-direction:column;}
+#camModal video,#camModal canvas{max-width:90%;border-radius:6px;}
+.declare{background:var(--cream);padding:10px;border-radius:4px;font-size:13px;margin:16px 0;}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:5px;display:none;z-index:50;}
+#loginBox{max-width:320px;margin:60px auto;text-align:center;}
+table.rep{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;}
+table.rep th,table.rep td{border:1px solid #ccc;padding:5px 7px;white-space:nowrap;}
+table.rep th{background:var(--maroon);color:#fff;position:sticky;top:0;}
+.repwrap{overflow:auto;max-height:65vh;}
+@media(max-width:640px){.grid2,.grid4{grid-template-columns:1fr;}}
+@media print{nav,button,#camModal{display:none!important;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">सा</div>
+  <div>
+    <h1>सरस्वती विद्या निकेतन, धनरुआ</h1>
+    <h2>SARASWATI VIDYA NIKETAN, DHANARUA</h2>
+    <p>जिला — पटना, बिहार • District — Patna, Bihar</p>
+  </div>
+</header>
+<nav>
+  <button id="tabFormBtn" class="active" onclick="showTab('form')">📝 New Admission / नया प्रवेश</button>
+  <button id="tabRepBtn" onclick="showTab('report')">📊 Reports / रिपोर्ट</button>
+</nav>
+
+<main id="formTab">
+  <h2 class="bar-title">प्रवेश हेतु आवेदन पत्र</h2>
+  <p class="bar-sub">ADMISSION APPLICATION FORM · SESSION 2026–27</p>
+
+  <div class="grid4">
+    <div class="field"><label>Admission No. (Office Use)<br>कार्यालय द्वारा आवंटित होगा</label><input id="admissionNo" readonly></div>
+    <div class="field"><label><b>Date / दिनांक *</b></label><input type="date" id="date" required></div>
+    <div class="field"><label><b>Class Applied For / कक्षा *</b></label>
+      <select id="classApplied" required><option value="">चुनें / Select</option>
+      <option>Nursery</option><option>LKG</option><option>UKG</option>
+      <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+      <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+      <option>11</option><option>12</option></select></div>
+    <div class="field"><label>Stream / संकाय (For 11 & 12)</label>
+      <select id="stream"><option>लागू नहीं / N/A</option><option>Science</option><option>Commerce</option><option>Arts</option></select></div>
+  </div>
+
+  <div class="camrow">
+    <div>
+      <label>छात्र की तस्वीर / Student Photo</label>
+      <div class="photo-box" id="photoBox">No Photo</div>
+      <button type="button" class="btn" onclick="openCam()">📷 Camera</button>
+      <button type="button" class="btn alt" onclick="fileInput.click()">Upload</button>
+      <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="fileToPhoto(this.files[0])">
+    </div>
+  </div>
+
+  <div id="fieldSections"></div>
+
+  <section class="grp"><h3>छ. संलग्न दस्तावेज़ सत्यापन / Documents Checklist</h3>
+    <table class="doclist"><thead><tr><th>#</th><th>दस्तावेज़ / Document</th><th>संलग्न / Attached</th><th>प्रतियाँ / Copies</th></tr></thead>
+    <tbody id="docBody"></tbody></table>
+  </section>
+
+  <section class="grp"><h3>कार्यालय उपयोग के लिए / For Office Use Only</h3>
+    <div class="grid2">
+      <div class="field"><label>UDISE PEN नंबर (Permanent Education No.)</label><input id="udisePen"></div>
+      <div class="field"><label>E-Shikshakosh छात्र कोड (Student Code)</label><input id="eshiksha"></div>
+      <div class="field full"><label>APAAR नंबर</label><input id="apaar"></div>
+    </div>
+  </section>
+
+  <div class="declare">
+    <label><input type="checkbox" id="declareChk" required> मैं घोषणा करता/करती हूँ कि उपरोक्त सभी सूचनाएँ मेरी जानकारी में सत्य हैं। यदि कोई सूचना असत्य पाई जाती है तो विद्यालय को प्रवेश रद्द करने का पूर्ण अधिकार होगा। <b>*</b></label>
+    <div class="grid2" style="margin-top:8px;">
+      <div class="field"><label>छात्र के हस्ताक्षर (टाइप करें) / Student Signature (type name) *</label><input id="sigStudent"></div>
+      <div class="field"><label>अभिभावक के हस्ताक्षर (टाइप करें) / Guardian Signature (type name) *</label><input id="sigGuardian"></div>
+    </div>
+  </div>
+
+  <button class="btn" onclick="submitForm()">✅ Submit Application / आवेदन जमा करें</button>
+  <span id="statusMsg" style="margin-left:10px;font-size:13px;"></span>
+</main>
+
+<main id="reportTab" style="display:none">
+  <div id="loginBox">
+    <h3>🔒 Report Access</h3>
+    <p style="font-size:13px;color:#666">Enter password to view / export admission records</p>
+    <input type="password" id="repPass" placeholder="Password"><br><br>
+    <button class="btn" onclick="checkPass()">Unlock</button>
+    <p id="passErr" style="color:#c00;font-size:12px"></p>
+  </div>
+  <div id="repContent" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <h3>Admission Records</h3>
+      <div>
+        <input id="repSearch" placeholder="Search name / class / mobile..." oninput="renderReport()" style="width:220px;display:inline-block">
+        <button class="btn" onclick="exportCSV()">⬇ CSV</button>
+        <button class="btn alt" onclick="window.print()">🖨 Print</button>
+      </div>
+    </div>
+    <p id="repSummary" style="font-size:13px;color:#555"></p>
+    <div class="repwrap"><table class="rep" id="repTable"></table></div>
+  </div>
+</main>
+
+<div id="camModal"><video id="camVideo" autoplay playsinline></video>
+  <div style="margin-top:10px"><button class="btn" onclick="capturePhoto()">Capture</button> <button class="btn alt" onclick="closeCam()">Close</button></div>
+</div>
+<canvas id="camCanvas" style="display:none"></canvas>
+<div id="toast"></div>
+
+<script>
+/* ====== CONFIG — EDIT BEFORE DEPLOYING ====== */
+const CONFIG = {
+  GITHUB_OWNER: "YOUR_GITHUB_USERNAME",
+  GITHUB_REPO:  "YOUR_REPO_NAME",
+  GITHUB_BRANCH:"main",
+  GITHUB_TOKEN: "YOUR_FINE_GRAINED_TOKEN_WITH_CONTENTS_READWRITE",
+  RECORDS_PATH: "records.json",
+  REPORT_PASSWORD_HASH: "" // leave blank to use default 282539; set via hashPassword() in console for a custom one
+};
+// Default report password is 282539 (checked via SHA-256 at runtime — see checkPass()).
+// To set a custom password: run  await sha256("yourPassword")  in the browser console
+// and paste the result into CONFIG.REPORT_PASSWORD_HASH above.
+/* ============================================ */
+
+const FIELDS = [
+ {title:"अ. छात्र का विवरण / Student Details", f:[
+   ["studentName","छात्र का पूरा नाम","Student's Full Name","text",1],
+   ["gender","लिंग","Gender","select",1,["Male / पुरुष","Female / महिला","Other / अन्य"]],
+   ["dob","जन्म तिथि","Date of Birth","date",1],
+   ["aadhaarStudent","आधार संख्या (छात्र)","Aadhaar No. (Student)","text",1],
+   ["religion","धर्म","Religion","text",0],
+   ["nationality","राष्ट्रीयता","Nationality","text",0,null,"भारतीय / Indian"],
+   ["category","श्रेणी","Category","select",1,["General","OBC","EBC","SC","ST"]],
+   ["height","ऊँचाई (cm)","Height (cm)","number",0],
+   ["weight","वजन (kg)","Weight (kg)","number",0],
+   ["bloodGroup","रक्त समूह","Blood Group","select",0,["A+","A-","B+","B-","O+","O-","AB+","AB-"]],
+   ["motherTongue","मातृभाषा","Mother Tongue","text",0,null,"हिंदी"],
+ ]},
+ {title:"ब. रुचियाँ, खेल एवं उपलब्धियाँ / Hobbies, Sports & Achievements", f:[
+   ["hobbies","शौक","Hobbies","text",0],
+   ["sportsPlayed","खेल","Sports Played","text",0],
+   ["sportsLevel","खेल स्तर","Sports Level","select",0,["N/A","School","District","State","National"]],
+   ["achievements","पुरस्कार/पदक (नाम - स्तर - वर्ष, प्रति पंक्ति एक)","Awards/Medals (Name - Level - Year, one per line)","textarea",0],
+ ]},
+ {title:"स. अभिभावक का विवरण / Parent & Guardian Details", f:[
+   ["fatherName","पिता का नाम","Father's Name","text",1],
+   ["fatherProfession","पिता का व्यवसाय","Father's Profession","text",0],
+   ["aadhaarFather","आधार संख्या (पिता)","Aadhaar No. (Father)","text",1],
+   ["motherName","माता का नाम","Mother's Name","text",1],
+   ["motherProfession","माता का व्यवसाय","Mother's Profession","text",0],
+   ["aadhaarMother","आधार संख्या (माता)","Aadhaar No. (Mother)","text",0],
+   ["guardianName","संरक्षक का नाम","Guardian's Name","text",0],
+   ["annualIncome","वार्षिक पारिवारिक आय (₹)","Annual Income (₹)","number",1],
+   ["mobile","मोबाइल नंबर","Mobile Number","tel",1],
+   ["altMobile","वैकल्पिक मोबाइल","Alternate Mobile","tel",0],
+   ["email","ईमेल","Email ID","email",0],
+ ]},
+ {title:"ह. आवासीय पता / Address Details", f:[
+   ["presentAddress","वर्तमान पता","Present Address","textarea",1],
+   ["permanentAddress","स्थायी पता","Permanent Address","textarea",1],
+   ["blockPS","प्रखंड / थाना","Block / P.S.","text",0],
+   ["district","जिला","District","text",1,null,"Patna"],
+   ["state","राज्य","State","text",1,null,"Bihar"],
+   ["pincode","पिन कोड","Pincode","text",1],
+ ]},
+ {title:"क्ष. पूर्व विद्यालय का विवरण / Academic History", f:[
+   ["lastSchool","पूर्व विद्यालय का नाम","Last School Attended","text",1],
+   ["lastClass","अंतिम अध्ययनरत कक्षा","Last Class Studied","text",1],
+   ["marksPercent","प्राप्तांक / प्रतिशत","Marks (%) Obtained","text",1],
+   ["tcNo","स्थानांतरण प्रमाणपत्र क्र. (TC/SLC No.)","TC / SLC No.","text",1],
+   ["tcDate","टीसी निर्गत तिथि","TC Issue Date","date",1],
+ ]},
+ {title:"ज्ञ. बैंक विवरण (अनिवार्य) / Bank Account Details", f:[
+   ["bankName","बैंक का नाम","Bank Name","text",1],
+   ["accountNumber","खाता संख्या","Account Number","text",1],
+   ["ifsc","IFSC कोड","IFSC Code","text",1],
+   ["accountHolder","खाताधारक का नाम","Account Holder Name","text",1],
+ ]},
+];
+
+const DOCS = [
+ "पिछली कक्षा का उत्तीर्ण अंकपत्र / प्रगति पत्र (Marksheet)",
+ "विद्यालय स्थानांतरण प्रमाणपत्र (TC/SLC Original)",
+ "जन्म प्रमाणपत्र या आयु प्रमाण पत्र",
+ "आधार कार्ड की प्रति (छात्र का)",
+ "आधार कार्ड की प्रति (अभिभावक का)",
+ "निवास प्रमाण पत्र (Residence Certificate)",
+ "जाति प्रमाण पत्र (SC/ST/EBC/OBC)",
+ "आय प्रमाण पत्र (Income Certificate)",
+ "बैंक खाता पासबुक की छायाप्रति"
+];
+
+let photoData = "";
+
+function renderFields(){
+  const wrap = document.getElementById('fieldSections');
+  FIELDS.forEach(sec=>{
+    const s = document.createElement('section'); s.className='grp';
+    s.innerHTML = `<h3>${sec.title}</h3><div class="grid2" id="grid-${sec.title.slice(0,2)}"></div>`;
+    wrap.appendChild(s);
+    const grid = s.querySelector('.grid2');
+    sec.f.forEach(([id,hi,en,type,req,opts,def])=>{
+      const div = document.createElement('div');
+      div.className = 'field' + (type==='textarea'?' full':'');
+      let inputHtml;
+      if(type==='select'){
+        inputHtml = `<select id="${id}" ${req?'required':''}><option value="">चुनें / Select</option>${opts.map(o=>`<option>${o}</option>`).join('')}</select>`;
+      } else if(type==='textarea'){
+        inputHtml = `<textarea id="${id}" ${req?'required':''}>${def||''}</textarea>`;
+      } else {
+        inputHtml = `<input type="${type}" id="${id}" ${req?'required':''} value="${def||''}">`;
+      }
+      div.innerHTML = `<label>${hi} / ${en}${req?' *':''}</label>${inputHtml}`;
+      grid.appendChild(div);
+    });
+  });
+  const docBody = document.getElementById('docBody');
+  DOCS.forEach((d,i)=>{
+    docBody.innerHTML += `<tr><td>${i+1}</td><td>${d}</td>
+      <td style="text-align:center"><input type="checkbox" id="doc${i}"></td>
+      <td><input type="number" id="docCopies${i}" value="1" min="0"></td></tr>`;
+  });
+  document.getElementById('date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('admissionNo').value = "SVN-" + Date.now().toString().slice(-8);
+}
+renderFields();
+
+/* ---------- Camera ---------- */
+let camStream;
+function openCam(){
+  document.getElementById('camModal').style.display='flex';
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}).then(s=>{
+    camStream = s; document.getElementById('camVideo').srcObject = s;
+  }).catch(()=>{ alert('Camera unavailable — use Upload instead.'); closeCam(); });
+}
+function closeCam(){
+  document.getElementById('camModal').style.display='none';
+  if(camStream) camStream.getTracks().forEach(t=>t.stop());
+}
+function capturePhoto(){
+  const v = document.getElementById('camVideo'), c = document.getElementById('camCanvas');
+  c.width=320; c.height=Math.round(320*v.videoHeight/v.videoWidth);
+  c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+  photoData = c.toDataURL('image/jpeg',0.7);
+  document.getElementById('photoBox').innerHTML = `<img src="${photoData}">`;
+  closeCam();
+}
+function fileToPhoto(file){
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const c = document.createElement('canvas');
+      c.width=320; c.height=Math.round(320*img.height/img.width);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      photoData = c.toDataURL('image/jpeg',0.7);
+      document.getElementById('photoBox').innerHTML = `<img src="${photoData}">`;
+    };
+    img.src = e.target.result;
+  };
+  r.readAsDataURL(file);
+}
+
+/* ---------- Collect + Submit ---------- */
+function collectRecord(){
+  const rec = {
+    admissionNo: document.getElementById('admissionNo').value,
+    date: document.getElementById('date').value,
+    classApplied: document.getElementById('classApplied').value,
+    stream: document.getElementById('stream').value,
+    photo: photoData,
+    submittedAt: new Date().toISOString()
+  };
+  FIELDS.forEach(sec=>sec.f.forEach(([id])=> rec[id] = document.getElementById(id).value));
+  rec.documents = DOCS.map((d,i)=>({name:d, attached: document.getElementById('doc'+i).checked, copies: document.getElementById('docCopies'+i).value}));
+  rec.udisePen = document.getElementById('udisePen').value;
+  rec.eshiksha = document.getElementById('eshiksha').value;
+  rec.apaar = document.getElementById('apaar').value;
+  rec.sigStudent = document.getElementById('sigStudent').value;
+  rec.sigGuardian = document.getElementById('sigGuardian').value;
+  return rec;
+}
+
+async function ghGetFile(){
+  const url = `https://api.github.com/repos/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/contents/${CONFIG.RECORDS_PATH}?ref=${CONFIG.GITHUB_BRANCH}`;
+  const res = await fetch(url, {headers:{Authorization:`token ${CONFIG.GITHUB_TOKEN}`}});
+  if(res.status===404) return {sha:null, records:[]};
+  const data = await res.json();
+  const records = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+  return {sha:data.sha, records};
+}
+async function ghSaveFile(records, sha){
+  const url = `https://api.github.com/repos/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/contents/${CONFIG.RECORDS_PATH}`;
+  const body = {
+    message: `Admission record added: ${new Date().toISOString()}`,
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(records,null,2)))),
+    branch: CONFIG.GITHUB_BRANCH
+  };
+  if(sha) body.sha = sha;
+  const res = await fetch(url,{method:'PUT',headers:{Authorization:`token ${CONFIG.GITHUB_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!res.ok) throw new Error((await res.json()).message || 'GitHub save failed');
+}
+
+async function submitForm(){
+  const required = document.querySelectorAll('#formTab [required]');
+  for(const el of required){ if(!el.value || (el.type==='checkbox' && !el.checked)){ el.focus(); toast('कृपया सभी आवश्यक फ़ील्ड भरें / Fill all required fields'); return; } }
+  const statusMsg = document.getElementById('statusMsg');
+  statusMsg.textContent = 'Saving...';
+  try{
+    const {sha, records} = await ghGetFile();
+    const rec = collectRecord();
+    records.push(rec);
+    await ghSaveFile(records, sha);
+    statusMsg.textContent = `✅ Saved. Admission No: ${rec.admissionNo}`;
+    toast('Application submitted successfully!');
+  }catch(err){
+    statusMsg.textContent = '❌ ' + err.message + ' (check CONFIG at top of file)';
+  }
+}
+function toast(msg){
+  const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block';
+  setTimeout(()=> t.style.display='none', 3000);
+}
+
+/* ---------- Tabs ---------- */
+function showTab(tab){
+  document.getElementById('formTab').style.display = tab==='form'?'block':'none';
+  document.getElementById('reportTab').style.display = tab==='report'?'block':'none';
+  document.getElementById('tabFormBtn').classList.toggle('active', tab==='form');
+  document.getElementById('tabRepBtn').classList.toggle('active', tab==='report');
+}
+
+/* ---------- Reports / password ---------- */
+async function sha256(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+let reportRecords = [];
+async function checkPass(){
+  const val = document.getElementById('repPass').value;
+  const hash = await sha256(val);
+  const targetHash = CONFIG.REPORT_PASSWORD_HASH || await sha256("282539");
+  if(hash !== targetHash){ document.getElementById('passErr').textContent = 'Incorrect password.'; return; }
+  document.getElementById('loginBox').style.display='none';
+  document.getElementById('repContent').style.display='block';
+  loadReport();
+}
+async function loadReport(){
+  try{
+    const {records} = await ghGetFile();
+    reportRecords = records;
+    renderReport();
+  }catch(e){ document.getElementById('repSummary').textContent = 'Could not load records: ' + e.message; }
+}
+function renderReport(){
+  const q = (document.getElementById('repSearch').value||'').toLowerCase();
+  const rows = reportRecords.filter(r => !q || JSON.stringify(r).toLowerCase().includes(q));
+  document.getElementById('repSummary').textContent = `${rows.length} of ${reportRecords.length} records shown.`;
+  const cols = ["admissionNo","date","classApplied","studentName","gender","dob","fatherName","mobile","district","lastSchool"];
+  let html = '<tr>' + cols.map(c=>`<th>${c}</th>`).join('') + '</tr>';
+  rows.forEach(r=>{ html += '<tr>' + cols.map(c=>`<td>${r[c]||''}</td>`).join('') + '</tr>'; });
+  document.getElementById('repTable').innerHTML = html;
+}
+function exportCSV(){
+  if(!reportRecords.length){ toast('No records to export'); return; }
+  const keys = Object.keys(reportRecords[0]).filter(k=>k!=='photo'&&k!=='documents');
+  let csv = keys.join(',') + '\n';
+  reportRecords.forEach(r=>{ csv += keys.map(k=> `"${(r[k]||'').toString().replace(/"/g,'""')}"`).join(',') + '\n'; });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'admission_records.csv'; a.click();
+}
+</script>
+</body>
+</html>
